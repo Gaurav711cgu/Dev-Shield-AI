@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Policy Engine</title>
+<style>
+body{background:#0f172a;color:white;font-family:sans-serif;padding:40px;}
+input{padding:8px;margin:5px;border-radius:6px;border:none;}
+button{padding:8px 14px;background:#38bdf8;border:none;border-radius:6px;}
+table{margin-top:20px;width:100%;background:#1e293b;}
+th,td{padding:10px;}
+</style>
+</head>
+<body>
+
+<h2>Policy Configuration (Admin Only)</h2>
+
+<form method="POST">
+<input name="keyword" placeholder="Keyword">
+<input name="weight" placeholder="Risk Weight">
+<button>Add Policy</button>
+</form>
+
+<table>
+<tr><th>ID</th><th>Keyword</th><th>Weight</th></tr>
+{% for p in policies %}
+<tr>
+<td>{{ p[0] }}</td>
+<td>{{ p[1] }}</td>
+<td>{{ p[2] }}</td>
+</tr>
+{% endfor %}
+</table>
+
+</body>
+</html>

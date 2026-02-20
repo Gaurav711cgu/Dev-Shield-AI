@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DevShield Enterprise Governance</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+--bg:#0b1220;
+--card:#111827;
+--accent:#3b82f6;
+--green:#22c55e;
+--red:#ef4444;
+--orange:#f97316;
+--yellow:#eab308;
+--text:#e5e7eb;
+--muted:#9ca3af;
+}
+
+*{box-sizing:border-box;}
+
+body{
+margin:0;
+font-family:'Inter',sans-serif;
+background:var(--bg);
+color:var(--text);
+}
+
+.navbar{
+height:70px;
+background:#0f172a;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 40px;
+border-bottom:1px solid #1f2937;
+}
+
+.nav-left{
+display:flex;
+align-items:center;
+gap:30px;
+}
+
+.logo{
+font-weight:700;
+font-size:18px;
+letter-spacing:1px;
+}
+
+.nav-left a{
+text-decoration:none;
+color:var(--muted);
+font-weight:500;
+transition:0.2s;
+}
+
+.nav-left a:hover{
+color:white;
+}
+
+.nav-right button{
+background:var(--accent);
+border:none;
+padding:8px 14px;
+border-radius:6px;
+color:white;
+font-weight:500;
+cursor:pointer;
+margin-left:10px;
+transition:0.2s;
+}
+
+.nav-right button:hover{
+transform:translateY(-2px);
+box-shadow:0 8px 20px rgba(59,130,246,0.4);
+}
+
+.container{
+padding:40px;
+max-width:1400px;
+margin:auto;
+}
+
+h1{
+font-size:24px;
+margin-bottom:30px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:25px;
+margin-bottom:30px;
+}
+
+.card{
+background:var(--card);
+padding:25px;
+border-radius:12px;
+border:1px solid #1f2937;
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 30px rgba(0,0,0,0.4);
+}
+
+.card h3{
+margin:0 0 10px 0;
+font-size:14px;
+color:var(--muted);
+}
+
+.card h2{
+margin:0;
+font-size:28px;
+font-weight:700;
+}
+
+.alert{
+background:rgba(239,68,68,0.15);
+border:1px solid var(--red);
+padding:15px;
+border-radius:10px;
+margin-bottom:30px;
+color:var(--red);
+font-weight:600;
+}
+
+.section{
+margin-top:40px;
+}
+
+.section h2{
+margin-bottom:20px;
+font-size:18px;
+}
+
+.heatmap{
+display:grid;
+grid-template-columns:repeat(10,1fr);
+gap:6px;
+}
+
+.cell{
+height:28px;
+border-radius:6px;
+transition:0.2s;
+}
+
+.cell:hover{
+transform:scale(1.1);
+}
+</style>
+</head>
+<body>
+
+<div class="navbar">
+<div class="nav-left">
+<div class="logo">🛡 DevShield</div>
+<a href="/dashboard">Dashboard</a>
+<a href="/threats">Threats</a>
+<a href="/analytics">Analytics</a>
+</div>
+
+<div class="nav-right">
+<button onclick="location.href='/demo'">Demo Mode</button>
+<button onclick="location.href='/export_pdf'">Export PDF</button>
+<button onclick="location.href='/logout'">Logout</button>
+</div>
+</div>
+
+<div class="container">
+
+<h1>Enterprise Governance Dashboard</h1>
+
+{% if alert_active %}
+<div class="alert">
+⚠ Critical threat activity detected in recent scans.
+</div>
+{% endif %}
+
+<div class="grid">
+
+<div class="card">
+<h3>Risk Index</h3>
+<h2>{{ risk_index }}</h2>
+</div>
+
+<div class="card">
+<h3>Critical</h3>
+<h2>{{ counts.CRITICAL }}</h2>
+</div>
+
+<div class="card">
+<h3>High</h3>
+<h2>{{ counts.HIGH }}</h2>
+</div>
+
+<div class="card">
+<h3>Medium</h3>
+<h2>{{ counts.MEDIUM }}</h2>
+</div>
+
+</div>
+
+<div class="section">
+<h2>Severity Distribution</h2>
+<canvas id="pieChart"></canvas>
+</div>
+
+<div class="section">
+<h2>Risk Trend</h2>
+<canvas id="trendChart"></canvas>
+</div>
+
+<div class="section">
+<h2>Risk Heatmap</h2>
+<div class="heatmap">
+{% for row in reports %}
+<div class="cell"
+style="background:
+{% if row[6] > 80 %}var(--red)
+{% elif row[6] > 50 %}var(--orange)
+{% elif row[6] > 20 %}var(--yellow)
+{% else %}var(--green)
+{% endif %};">
+</div>
+{% endfor %}
+</div>
+</div>
+
+</div>
+
+<script>
+
+// PIE CHART
+new Chart(document.getElementById("pieChart"),{
+type:'doughnut',
+data:{
+labels:["Critical","High","Medium","Low"],
+datasets:[{
+data:[
+{{ counts.CRITICAL }},
+{{ counts.HIGH }},
+{{ counts.MEDIUM }},
+{{ counts.LOW }}
+],
+backgroundColor:["#ef4444","#f97316","#eab308","#22c55e"]
+}]
+},
+options:{
+cutout:'70%',
+plugins:{legend:{position:'bottom'}}
+}
+});
+
+// TREND CHART
+new Chart(document.getElementById("trendChart"),{
+type:'line',
+data:{
+labels:[
+{% for row in reports %}
+"{{ row[1] }}",
+{% endfor %}
+],
+datasets:[{
+label:"Risk Score",
+data:[
+{% for row in reports %}
+{{ row[6] }},
+{% endfor %}
+],
+borderColor:"#3b82f6",
+backgroundColor:"rgba(59,130,246,0.2)",
+fill:true,
+tension:0.4
+}]
+},
+options:{
+plugins:{legend:{display:false}}
+}
+});
+</script>
+
+</body>
+</html>

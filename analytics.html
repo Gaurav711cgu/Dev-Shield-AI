@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Analytics - DevShield</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{
+margin:0;
+font-family:'Inter',sans-serif;
+background:#0f172a;
+color:white;
+padding:40px;
+}
+
+.nav a{
+color:#38bdf8;
+text-decoration:none;
+margin-right:20px;
+}
+
+.card{
+background:#1e293b;
+padding:25px;
+border-radius:12px;
+margin-top:30px;
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+<a href="/dashboard">Dashboard</a>
+<a href="/threats">Threats</a>
+<a href="/policies">Policies</a>
+</div>
+
+<h2>Analytics Overview</h2>
+
+<div class="card">
+<canvas id="barChart"></canvas>
+</div>
+
+<script>
+const labels = [
+{% for item in data %}
+"{{ item[0] }}",
+{% endfor %}
+];
+
+const values = [
+{% for item in data %}
+{{ item[1] }},
+{% endfor %}
+];
+
+new Chart(document.getElementById("barChart"),{
+type:'bar',
+data:{
+labels:labels,
+datasets:[{
+label:"Threat Count",
+data:values,
+backgroundColor:["#ef4444","#f97316","#eab308","#22c55e"]
+}]
+},
+options:{
+plugins:{legend:{display:false}},
+animation:{duration:1500}
+}
+});
+</script>
+
+</body>
+</html>
